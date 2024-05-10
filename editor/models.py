@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from documents.models import Document
 
 # Create your models here.
 class GlasserRegion(models.Model):
@@ -32,6 +33,7 @@ class ColeNetwork(models.Model):
 
 class Paper(models.Model):
     name = models.TextField(blank=True, null=True)
+    document = models.ForeignKey(Document, related_name='papers', on_delete=models.CASCADE, blank=True, null=True)
     introduction = models.TextField(blank=True, null=True)
     theory = models.TextField(blank=True, null=True)
     summary = models.TextField(blank=True, null=True)

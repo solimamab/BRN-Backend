@@ -15,9 +15,7 @@ class ExperimentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         measurements_data = validated_data.pop('measurements', [])
-        # Get the 'paper' instance from the context
         paper = self.context['paper']
-        # Create the experiment ensuring 'paper' is not duplicated in validated_data
         experiment = Experiment.objects.create(paper=paper, **validated_data)
         for meas_data in measurements_data:
             Measurement.objects.create(experiment=experiment, **meas_data)
@@ -34,10 +32,16 @@ class PaperSerializer(serializers.ModelSerializer):
         experiments_data = validated_data.pop('experiments', [])
         paper = Paper.objects.create(**validated_data)
         for exp_data in experiments_data:
-            # Pass the 'paper' context to the ExperimentSerializer
             exp_serializer = ExperimentSerializer(data=exp_data, context={'paper': paper})
             if exp_serializer.is_valid():
                 exp_serializer.save()
             else:
                 raise serializers.ValidationError(exp_serializer.errors)
         return paper
+
+class PaperWithDocumentSerializer(serializers.ModelSerializer):
+    document = serializers.UUIDField(source='document.unique_identifier', read_only=True)
+
+    class Meta:
+        model = Paper
+        fields = '__all__'

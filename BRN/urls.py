@@ -23,4 +23,6 @@ from editor.views import PaperSubmissionAPI
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('api/paper/', PaperSubmissionAPI.as_view(), name='paper_api'),
+    path('api/', include('documents.urls')),  # Add Document App URLs
+
 ]

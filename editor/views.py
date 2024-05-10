@@ -1,19 +1,23 @@
+# In editor/views.py
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from documents.models import Document
 from BRN import settings
 from parcel_utils.atlas import load_atlas
-from .models import GlasserRegion, Paper, Experiment, Measurement
-from .serializers import PaperSerializer
-import numpy as np
-import uuid
 from parcel_utils import brodmann, atlas
+from editor.parsers import parse_paper1_template
+import numpy as np
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
 class PaperSubmissionAPI(APIView):
     def post(self, request, *args, **kwargs):
+        from documents.serializers import DocumentSerializer  
+        from editor.models import GlasserRegion
+
         paper_data = request.data.get('paper', {})
         logger.info(f"Incoming paper data: {paper_data}")
 
@@ -28,7 +32,7 @@ class PaperSubmissionAPI(APIView):
         except FileNotFoundError as e:
             logger.error(f"Atlas file not found: {e}")
             return Response({"error": f"Atlas file not found: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
         # Process experiments and measurements
         for exp_index, exp_data in enumerate(paper_data.get('experiments', [])):
             experiments_info[exp_index] = {
@@ -73,6 +77,7 @@ class PaperSubmissionAPI(APIView):
                         parcel = int(str(parcel)[1:])
                         label = f"{label.strip()}.R"
                     try:
+                        from editor.models import GlasserRegion
                         region = GlasserRegion.objects.get(index=parcel)
                         regions_str = f'"{label}":{region.index}'
                     except GlasserRegion.DoesNotExist:
@@ -103,14 +108,20 @@ class PaperSubmissionAPI(APIView):
         paper_data['experiments'] = list(experiments_info.values())
         paper_data['url'] = paper_data.get('url', '')
 
-        logger.info(f"Final paper data for serialization: {paper_data}")
+        # Create the document metadata
+        document_data = {
+            'template': {'name': 'Paper1'},
+            'content': {},  # Placeholder for TipTap content
+            'metadata': {'paper': paper_data}
+        }
 
-        # Serialize and save
-        serializer = PaperSerializer(data=paper_data)
-        if serializer.is_valid():
-            serializer.save()
+        # Serialize and save the document
+        document_serializer = DocumentSerializer(data=document_data)
+        if document_serializer.is_valid():
+            document = document_serializer.save()
+            parse_paper1_template(document, document_data['metadata'])
             logger.info("Paper data successfully saved.")
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(document_serializer.data, status=status.HTTP_201_CREATED)
         else:
-            logger.error(f"Serializer errors: {serializer.errors}")
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            logger.error(f"Serializer errors: {document_serializer.errors}")
+            return Response(document_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
