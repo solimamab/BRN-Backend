@@ -1,14 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-
 from BRN import settings
 from parcel_utils.atlas import load_atlas
 from .models import GlasserRegion, Paper, Experiment, Measurement
 from .serializers import PaperSerializer
 import numpy as np
 import uuid
-from parcel_utils import parcel_utils
+from parcel_utils import brodmann, atlas
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,7 +23,7 @@ class PaperSubmissionAPI(APIView):
         # Load the atlas
         atlas_path = settings.GLASSER_ATLAS_PATH
         try:
-            atlas = load_atlas(atlas_path)
+            glasserAtlas = load_atlas(atlas_path)
             logger.info("Atlas loaded successfully")
         except FileNotFoundError as e:
             logger.error(f"Atlas file not found: {e}")
@@ -48,7 +47,7 @@ class PaperSubmissionAPI(APIView):
                 # Handle Brodmann Area conversion if present
                 if 'brodmann_area' in meas_data and meas_data['brodmann_area']:
                     try:
-                        x, y, z = parcel_utils.get_mni_from_brodmann(int(meas_data['brodmann_area']))
+                        x, y, z = brodmann.get_mni_from_brodmann(int(meas_data['brodmann_area']))
                         label = meas_data.get('label', '')
                         formatted_coordinate = f'"{label}": {x:.1f}, {y:.1f}, {z:.1f}'
                     except Exception as e:
@@ -66,7 +65,7 @@ class PaperSubmissionAPI(APIView):
                     formatted_coordinate = f'"{label}": {x:.1f}, {y:.1f}, {z:.1f}'
 
                 # Find the closest parcel and handle regions
-                parcel = parcel_utils.find_closest_parcel(atlas, np.array([x, y, z]))
+                parcel = atlas.find_closest_parcel(glasserAtlas, np.array([x, y, z]))
                 regions_str = ""
                 if parcel:
                     if len(str(parcel)) == 4 and str(parcel).startswith("1"):

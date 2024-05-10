@@ -4,7 +4,7 @@ from editor.models import ColeNetwork
 
 class Command(BaseCommand):
     help = 'Import Cole Networks and related parcels from a CSV file'
- #s
+
     def handle(self, *args, **kwargs):
         csv_file_path = 'data/ColeGlasser.csv'
 
