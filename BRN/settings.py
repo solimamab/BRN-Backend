@@ -58,7 +58,7 @@ INSTALLED_APPS = [
     "editor",
     "chrome_extension",
     "parcel_utils",
-    "documents",
+    "templates",
 ]
 
 MIDDLEWARE = [

@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from editor.models import Measurement, GlasserRegion
+from templates.models import Measurement, GlasserRegion
 import json
 
 class Command(BaseCommand):

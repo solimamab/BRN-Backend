@@ -7,8 +7,8 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("documents", "0001_initial"),
         ("editor", "0001_initial"),
+        ("templates", "0001_initial"),
     ]
 
     operations = [

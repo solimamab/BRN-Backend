@@ -1,6 +1,6 @@
 import csv
 from django.core.management.base import BaseCommand
-from editor.models import ColeNetwork
+from templates.models import ColeNetwork
 
 class Command(BaseCommand):
     help = 'Import Cole Networks and related parcels from a CSV file'
