@@ -11,7 +11,7 @@ class DocumentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Document
-        fields = ('unique_identifier', 'content', 'template', 'created_at', 'updated_at')
+        fields = ('unique_identifier', 'name', 'content', 'template', 'created_at', 'updated_at')
 
     def create(self, validated_data):
         template_data = validated_data.pop('template', None)
