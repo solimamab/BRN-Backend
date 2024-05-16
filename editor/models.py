@@ -11,11 +11,11 @@ class Template(models.Model):
 
 class Document(models.Model):
     unique_identifier = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    template = models.ForeignKey(Template, related_name="documents", on_delete=models.CASCADE)
+    template = models.ForeignKey(Template, on_delete=models.CASCADE, null=True, blank=True)
     content = models.JSONField(default=dict)  # TipTap editor content
     metadata = models.JSONField(default=dict)  # Template-specific metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.template.name} Document - {self.unique_identifier}"
+        return f" Document - {self.unique_identifier}"

@@ -74,6 +74,10 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "BRN.urls"
 
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'BRN.editor.custom_exception_handler'
+}
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
