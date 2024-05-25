@@ -3,15 +3,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import generics
-from .models import Document, Template
-from .serializers import DocumentSerializer, TemplateSerializer
+from .models import Document 
+from .serializers import DocumentSerializer
 from templates.parsers import parse_paper1_template  # Import parsing function
 
-class TemplateListAPI(APIView):
-    def get(self, request):
-        templates = Template.objects.all()
-        serializer = TemplateSerializer(templates, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class DocumentList(generics.ListAPIView):
     queryset = Document.objects.all()
