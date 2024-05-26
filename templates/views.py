@@ -4,6 +4,8 @@ from rest_framework.permissions import IsAuthenticated  # Optional: If you requi
 from rest_framework.parsers import JSONParser
 from .parsers import parse_document
 import logging
+import json
+
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +14,7 @@ class ProcessDocumentView(APIView):
 
     def post(self, request, *args, **kwargs):
         json_data = request.data
+        logger.debug(f"Received JSON data: {json_data}")
         try:
             paper_data, experiments = parse_document(json_data)
             return JsonResponse({
