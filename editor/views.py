@@ -5,7 +5,6 @@ from rest_framework import status
 from rest_framework import generics
 from .models import Document 
 from .serializers import DocumentSerializer
-from templates.parsers import parse_paper1_template  # Import parsing function
 
 
 class DocumentList(generics.ListAPIView):
