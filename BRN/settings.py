@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "editor",
     "chrome_extension",
     "parcel_utils",
+    "templates",
 ]
 
 MIDDLEWARE = [
@@ -72,6 +73,10 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "BRN.urls"
+
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'editor.custom_exception_handler.custom_exception_handler',
+}
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",

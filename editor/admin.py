@@ -1,9 +1,5 @@
 from django.contrib import admin
-from .models import GlasserRegion, Paper, Experiment, Measurement, ColeNetwork
+from .models import Document
 
 # Register your models here.
-admin.site.register(GlasserRegion)
-admin.site.register(Paper)
-admin.site.register(Experiment)
-admin.site.register(Measurement)
-admin.site.register(ColeNetwork)
+admin.site.register(Document)

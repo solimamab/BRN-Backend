@@ -17,10 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
-from editor.views import PaperSubmissionAPI
+from templates.views import PaperSubmissionAPI
 
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('api/paper/', PaperSubmissionAPI.as_view(), name='paper_api'),
+    path('api/', include('editor.urls')),  # Add Document App URLs
+
 ]
