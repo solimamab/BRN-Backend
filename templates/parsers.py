@@ -34,9 +34,12 @@ def parse_document(content):
 def parse_node_content(node_content):
     """ Utility function to parse content from a node's nested structure. """
     try:
-        # Navigate through nested 'content' to find the 'text' element
-        return node_content['content'][0]['content'][0]['text']
-    except (IndexError, KeyError) as e:
+        if 'content' in node_content and isinstance(node_content['content'], list) and len(node_content['content']) > 0:
+            text_node = node_content['content'][0]
+            if 'text' in text_node:
+                return text_node['text']
+        return None
+    except (IndexError, KeyError, TypeError) as e:
         logger.error(f"Error accessing text in node: {e}")
         raise
 

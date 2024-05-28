@@ -1,9 +1,18 @@
-from django.http import JsonResponse
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated  # Optional: If you require authentication
+
 from rest_framework.parsers import JSONParser
 from .parsers import parse_document
+from django.http import JsonResponse
+from rest_framework.views import APIView
+from .serializers import PaperSerializer
+from parcel_utils.atlas import load_atlas, find_closest_parcel
+from .models import GlasserRegion
+from parcel_utils import brodmann
+import uuid
+import numpy as np
 import logging
+import json
+import os
+from BRN import settings
 
 logger = logging.getLogger(__name__)
 
@@ -12,8 +21,27 @@ class ProcessDocumentView(APIView):
 
     def post(self, request, *args, **kwargs):
         json_data = request.data
+        logger.debug(f"Received JSON data: {json_data}")
         try:
             paper_data, experiments = parse_document(json_data)
+            # Define the directory and filename
+            directory = 'parsed_documents'
+            filename = 'parsed_data.json'
+
+            # Ensure the directory exists
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+
+            # Define the full path
+            full_path = os.path.join(directory, filename)
+
+            # Write the data to a file
+            with open(full_path, 'w') as file:
+                json.dump({
+                    'paper': paper_data,
+                    'experiments': experiments
+                }, file, indent=4)
+
             return JsonResponse({
                 'status': 'success',
                 'paper': paper_data,
@@ -22,3 +50,88 @@ class ProcessDocumentView(APIView):
         except Exception as e:
             logger.error(f"Error processing document: {str(e)}")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        
+class PaperSubmissionView(APIView):
+    def post(self, request, *args, **kwargs):
+        json_data = request.data
+        logger.debug("Received JSON data: {}".format(json_data))
+        try:
+            paper_data, experiments_data = parse_document(json_data)
+            
+            paper_mapped = {
+                'name': paper_data.get('paperName', '').strip(),
+                'introduction': paper_data.get('introduction', '').strip(),
+                'theory': paper_data.get('theory', '').strip(),
+                'summary': paper_data.get('summary', '').strip(),
+                'url': paper_data.get('paperURL', '').strip(),
+                'experiments': []
+            }
+
+            atlas_path = settings.GLASSER_ATLAS_PATH
+            try:
+                glasserAtlas = load_atlas(atlas_path)
+                logger.info("Atlas loaded successfully")
+            except FileNotFoundError as e:
+                logger.error("Atlas file not found: {}".format(e))
+                return JsonResponse({"error": "Atlas file not found: {}".format(e)}, status=500)
+
+            for exp_data in experiments_data:
+                experiment_mapped = {
+                    'name': exp_data.get('experimentName', '').strip(),
+                    'task_context': exp_data.get('taskContext', '').strip(),
+                    'task': exp_data.get('task', '').strip(),
+                    'task_explained': exp_data.get('taskExplained', '').strip(),
+                    'discussion': exp_data.get('discussion', '').strip(),
+                    'url': exp_data.get('experimentURL', '').strip(),
+                    'measurements': [],
+                    'unique_identifier': uuid.uuid4()
+                }
+
+                for meas_data in exp_data.get('measurements', []):
+                    coordinates, region_str = self.format_coordinates_and_label(meas_data, glasserAtlas)
+                    
+                    measurement_mapped = {
+                        'description': meas_data.get('mDescription', '').strip(),
+                        'parameters': meas_data.get('mParameters', '').strip(),
+                        'interpretation': meas_data.get('mInterpertation', '').strip(),
+                        'coordinates': coordinates,  # Now storing the formatted string
+                        'regions': region_str,  # Adjusting to use label as regions string
+                        'unique_identifier': uuid.uuid4()
+                    }
+                    experiment_mapped['measurements'].append(measurement_mapped)
+
+                paper_mapped['experiments'].append(experiment_mapped)
+
+            serializer = PaperSerializer(data=paper_mapped)
+            if serializer.is_valid():
+                serializer.save()
+                return JsonResponse(serializer.data, status=201)
+            else:
+                logger.error("Serializer errors: {}".format(serializer.errors))
+                return JsonResponse(serializer.errors, status=400)
+
+        except Exception as e:
+            logger.error("Error processing document: {}".format(str(e)))
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    def format_coordinates_and_label(self, meas_data, glasserAtlas):
+        """Formats coordinates and label string based on input data."""
+        if 'bArea' in meas_data and meas_data['bArea']:
+            x, y, z = brodmann.get_mni_from_brodmann(int(meas_data['bArea']))
+        else:
+            x = float(meas_data.get('xCoordinate', 0))
+            y = float(meas_data.get('yCoordinate', 0))
+            z = float(meas_data.get('zCoordinate', 0))
+        label = meas_data.get('mLabel', '').strip()
+
+        # Find the closest parcel
+        parcel = find_closest_parcel(glasserAtlas, np.array([x, y, z]))
+        regions_str = label
+        if parcel:
+            try:
+                region = GlasserRegion.objects.get(index=parcel)
+                regions_str = f'"{label}":{region.index}'
+            except GlasserRegion.DoesNotExist:
+                regions_str = f'"{label}": "Unknown"'
+        coordinates = f'"{label}": {x:.1f}, {y:.1f}, {z:.1f}'
+        return coordinates, regions_str
