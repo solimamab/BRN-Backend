@@ -1,0 +1,28 @@
+{
+    "paper": {
+        "paperName": "farse",
+        "introduction": "asdfgas",
+        "theory": "asdfgasg",
+        "summary": "asfg",
+        "paperURL": "https://docs.google.com/document/d/1kT_CgEYpY6eyvse6bkFw5IqhIAvAieynmo6j4jjIijo/edit"
+    },
+    "experiments": [
+        {
+            "experimentName": "asdf",
+            "taskContext": "asdg",
+            "task": "asg",
+            "taskExplained": "asdf",
+            "discussion": "asdf",
+            "experimentURL": " https://docs.google.com/document/d/1kT_CgEYpY6eyvse6bkFw5IqhIAvAieynmo6j4jjIijo/edit",
+            "measurements": [
+                {
+                    "mDescription": "parse ",
+                    "mParameters": "parse ",
+                    "mInterpertation": " parse ",
+                    "mLabel": " parse ",
+                    "bArea": "3"
+                }
+            ]
+        }
+    ]
+}

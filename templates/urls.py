@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import ProcessDocumentView
+from .views import ProcessDocumentView, PaperSubmissionView
 
 urlpatterns = [
     # other paths
-    path('documents/parse/', ProcessDocumentView.as_view(), name='process_document'),
+    path('documents/parse/', PaperSubmissionView.as_view(), name='process_document'),
 ]
