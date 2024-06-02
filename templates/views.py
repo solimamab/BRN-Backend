@@ -129,7 +129,13 @@ class PaperSubmissionView(APIView):
         regions_str = label
         if parcel:
             try:
-                region = GlasserRegion.objects.get(index=parcel)
+                # Removing extra digits at the beginning if present
+                parcel_str = str(parcel)
+                if len(parcel_str) == 4 and parcel_str[0] == '1':
+                    parcel_str = parcel_str[1:]
+                elif len(parcel_str) == 4 and parcel_str[1] == '0':
+                    parcel_str = parcel_str[2:]
+                region = GlasserRegion.objects.get(index=parcel_str)
                 regions_str = f'"{label}":{region.index}'
             except GlasserRegion.DoesNotExist:
                 regions_str = f'"{label}": "Unknown"'
