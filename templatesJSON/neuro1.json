@@ -1,0 +1,70 @@
+{
+    "type": "doc",
+    "content": [
+        {
+            "type": "paperNode",
+            "content": [
+                {
+                    "type": "paperNameParagraph",
+                    "attrs": {
+                        "dataType": "paperName"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": " "
+                        }
+                    ]
+                },
+                {
+                    "type": "introductionParagraph",
+                    "attrs": {
+                        "dataType": "introduction"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": " "
+                        }
+                    ]
+                },
+                {
+                    "type": "theoryParagraph",
+                    "attrs": {
+                        "dataType": "theory"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": " "
+                        }
+                    ]
+                },
+                {
+                    "type": "summaryParagraph",
+                    "attrs": {
+                        "dataType": "summary"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": " "
+                        }
+                    ]
+                },
+                {
+                    "type": "paperURLParagraph",
+                    "attrs": {
+                        "dataType": "paperURL"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": " "
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
