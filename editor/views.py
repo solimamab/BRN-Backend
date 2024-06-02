@@ -45,3 +45,9 @@ class DocumentDetailAPI(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class DocumentDelete(APIView):
+    def delete(self, request, unique_identifier):
+        document = get_object_or_404(Document, unique_identifier=unique_identifier)
+        document.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
