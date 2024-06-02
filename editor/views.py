@@ -87,3 +87,12 @@ class DocumentNeuro1(APIView):
         except Exception as e:
             logger.exception("Error occurred while creating Neuro1 template document: %s", str(e))
             return JsonResponse({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+class DocumentMetadata(APIView):
+    def get(self, request, unique_identifier):
+        document = get_object_or_404(Document, unique_identifier=unique_identifier)
+        if document.metadata:
+            return Response(document.metadata)
+        else:
+            return Response({"error": "No metadata found for the specified document"}, status=status.HTTP_404_NOT_FOUND)

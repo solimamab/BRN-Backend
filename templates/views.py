@@ -1,11 +1,11 @@
-
 from rest_framework.parsers import JSONParser
+from editor.models import Document
 from .parsers import parse_document
 from django.http import JsonResponse
 from rest_framework.views import APIView
-from .serializers import PaperSerializer
+from .serializers import ExperimentSerializer, PaperSerializer
 from parcel_utils.atlas import load_atlas, find_closest_parcel
-from .models import GlasserRegion
+from .models import GlasserRegion, Paper, Experiment, Measurement
 from parcel_utils import brodmann
 import uuid
 import numpy as np
@@ -52,14 +52,20 @@ class ProcessDocumentView(APIView):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
         
 class PaperSubmissionView(APIView):
+    parser_classes = [JSONParser]
+
     def post(self, request, *args, **kwargs):
-        json_data = request.data
+        json_data = request.data.get('content')
         logger.debug("Received JSON data: {}".format(json_data))
+        document_uuid = request.data.get('uuid')  
         try:
+            document = Document.objects.get(unique_identifier=document_uuid)
             paper_data, experiments_data = parse_document(json_data)
+            #give document foriegn key to paper_data
             
             paper_mapped = {
                 'name': paper_data.get('paperName', '').strip(),
+                'document': document.id, # Assigning the document id to the paper 'document' field
                 'introduction': paper_data.get('introduction', '').strip(),
                 'theory': paper_data.get('theory', '').strip(),
                 'summary': paper_data.get('summary', '').strip(),
@@ -104,7 +110,21 @@ class PaperSubmissionView(APIView):
 
             serializer = PaperSerializer(data=paper_mapped)
             if serializer.is_valid():
-                serializer.save()
+                paper = serializer.save()
+
+                # Serialize experiments data
+                experiments_serialized = [ExperimentSerializer(exp).data for exp in paper.experiments.all()]
+
+
+                # Create metadata JSON including serialized paper and experiments data
+                metadata = {
+                    'paper': serializer.data,
+                    'experiments': experiments_serialized
+                }
+
+                # Save metadata to the Document
+                document.metadata = metadata
+                document.save()
                 return JsonResponse(serializer.data, status=201)
             else:
                 logger.error("Serializer errors: {}".format(serializer.errors))
@@ -113,7 +133,9 @@ class PaperSubmissionView(APIView):
         except Exception as e:
             logger.error("Error processing document: {}".format(str(e)))
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
+        except Document.DoesNotExist:
+            return JsonResponse({'error': 'Document not found'}, status=404)
+        
     def format_coordinates_and_label(self, meas_data, glasserAtlas):
         """Formats coordinates and label string based on input data."""
         if 'bArea' in meas_data and meas_data['bArea']:
