@@ -41,7 +41,8 @@ class Paper(models.Model):
     url = models.URLField(blank=True, null=True, help_text="Link to the source document or publication.")
 
     def __str__(self):
-        return self.name or "Unnamed Paper"
+        #return unique identifier as string if it exists, otherwise return "Unnamed Paper"
+        return str(self.unique_identifier) if self.unique_identifier else "Unnamed Paper"
 
 class Experiment(models.Model):
     name = models.TextField(blank=True, null=True)
@@ -54,7 +55,7 @@ class Experiment(models.Model):
     url = models.URLField(blank=True, null=True, help_text="Link to the source document or publication.")
 
     def __str__(self):
-        return self.name or "Unnamed Experiment"
+        return str(self.unique_identifier) if self.unique_identifier else "Unnamed Paper"
 
 class Measurement(models.Model):
     regions = models.TextField(blank=True, null=True)
@@ -66,4 +67,4 @@ class Measurement(models.Model):
     unique_identifier = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     def __str__(self):
-        return self.description or "Unnamed Measurement"
+        return str(self.unique_identifier) if self.unique_identifier else "Unnamed Paper"

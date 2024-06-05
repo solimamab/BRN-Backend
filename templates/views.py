@@ -81,7 +81,9 @@ class PaperSubmissionView(APIView):
                 logger.error("Atlas file not found: {}".format(e))
                 return JsonResponse({"error": "Atlas file not found: {}".format(e)}, status=500)
 
+            logger.debug("Processing experiments with data: %s", experiments_data)
             for exp_data in experiments_data:
+                logger.debug("Setting up experiment with initial data: %s", exp_data)
                 experiment_mapped = {
                     'name': exp_data.get('experimentName', '').strip(),
                     'task_context': exp_data.get('taskContext', '').strip(),
@@ -90,36 +92,48 @@ class PaperSubmissionView(APIView):
                     'discussion': exp_data.get('discussion', '').strip(),
                     'url': exp_data.get('experimentURL', '').strip(),
                     'measurements': [],
-                    'unique_identifier': uuid.uuid4()
                 }
+                logger.debug("Experiment mapped data prepared: %s", experiment_mapped)
 
                 for meas_data in exp_data.get('measurements', []):
+                    logger.debug("Processing measurement with data: %s", meas_data)
                     coordinates, region_str = self.format_coordinates_and_label(meas_data, glasserAtlas)
-                    
+                    logger.debug("Formatted coordinates: %s, Region String: %s", coordinates, region_str)
                     measurement_mapped = {
                         'description': meas_data.get('mDescription', '').strip(),
                         'parameters': meas_data.get('mParameters', '').strip(),
                         'interpretation': meas_data.get('mInterpertation', '').strip(),
-                        'coordinates': coordinates,  # Now storing the formatted string
-                        'regions': region_str,  # Adjusting to use label as regions string
-                        'unique_identifier': uuid.uuid4()
+                        'coordinates': coordinates,
+                        'regions': region_str,
+
                     }
+                    logger.debug("Measurement mapped data prepared: %s", measurement_mapped)
+                    logger.debug("Appending measurement to experiment. Current measurements: %s", experiment_mapped['measurements'])
                     experiment_mapped['measurements'].append(measurement_mapped)
+                    logger.debug("After appending measurement: %s", experiment_mapped['measurements'])
 
+                logger.debug("Appending experiment to paper. Current experiments: %s", paper_mapped['experiments'])
                 paper_mapped['experiments'].append(experiment_mapped)
+                logger.debug("Experiment added to paper data: %s", experiment_mapped)
+                logger.debug("After appending experiment: %s", paper_mapped['experiments'])
 
+            logger.debug("Final paper data to be saved: %s", paper_mapped)
             serializer = PaperSerializer(data=paper_mapped)
             if serializer.is_valid():
                 paper = serializer.save()
+                logger.info("Paper data saved successfully, ID: %s", paper.id)
+                # add the unique identifier to the paper mapped data from serializer
 
                 # Serialize experiments data
                 experiments_serialized = [ExperimentSerializer(exp).data for exp in paper.experiments.all()]
+                # attmpeting to log what the content of the serialized data is 
+                logger.debug("Serialized experiments data: %s", experiments_serialized)
+                logger.debug("Serialized  data: %s", serializer.data)
 
 
                 # Create metadata JSON including serialized paper and experiments data
                 metadata = {
                     'paper': serializer.data,
-                    'experiments': experiments_serialized
                 }
 
                 # Save metadata to the Document
