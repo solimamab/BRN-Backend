@@ -34,18 +34,6 @@ def parse_document(content):
 def parse_node_content(node_content):
     """ Utility function to parse content from a node's nested structure. """
     try:
-        if 'content' in node_content and isinstance(node_content['content'], list) and len(node_content['content']) > 0:
-            text_node = node_content['content'][0]
-            if 'text' in text_node:
-                return text_node['text']
-        return None
-    except (IndexError, KeyError, TypeError) as e:
-        logger.error(f"Error accessing text in node: {e}")
-        raise
-
-def parse_node_content(node_content):
-    """ Utility function to parse content from a node's nested structure. """
-    try:
         # Navigate through nested 'content' to find the 'text' element
         if 'content' in node_content and len(node_content['content']) > 0:
             text_node = node_content['content'][0]
@@ -57,8 +45,9 @@ def parse_node_content(node_content):
         raise
 
 def parse_paper_node(node):
-    """ Parses attributes from a paper node. """
-    paper_attrs = {}
+    """ Parses attributes and UUID from a paper node. """
+    uuid = node['attrs'].get('uuid', None)
+    paper_attrs = {'uuid': uuid}
     for content in node['content']:
         if 'attrs' in content and 'dataType' in content['attrs']:
             attr_type = content['attrs']['dataType']
@@ -68,8 +57,9 @@ def parse_paper_node(node):
     return paper_attrs
 
 def parse_experiment_node(node):
-    """ Parses attributes from an experiment node. """
-    experiment_attrs = {}
+    """ Parses attributes and UUID from an experiment node. """
+    uuid = node['attrs'].get('uuid', None)
+    experiment_attrs = {'uuid': uuid}
     for content in node['content']:
         if 'attrs' in content and 'dataType' in content['attrs']:
             attr_type = content['attrs']['dataType']
@@ -79,8 +69,9 @@ def parse_experiment_node(node):
     return experiment_attrs
 
 def parse_measurement_node(node):
-    """ Parses attributes from a measurement node. """
-    measurement_attrs = {}
+    """ Parses attributes and UUID from a measurement node. """
+    uuid = node['attrs'].get('uuid', None)
+    measurement_attrs = {'uuid': uuid}
     for content in node['content']:
         if 'attrs' in content and 'dataType' in content['attrs']:
             attr_type = content['attrs']['dataType']

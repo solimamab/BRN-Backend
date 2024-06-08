@@ -1,4 +1,3 @@
-# serializers.py
 from venv import logger
 from rest_framework import serializers
 from .models import Paper, Experiment, Measurement

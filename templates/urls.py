@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import ProcessDocumentView, PaperSubmissionView
+from .views import PaperSubmissionView
 
 urlpatterns = [
     # other paths
