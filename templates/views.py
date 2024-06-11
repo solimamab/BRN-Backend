@@ -209,3 +209,27 @@ class DocumentNodeManagementAPI(APIView):
         except Exception as e:
             logger.error(f"Error deleting {node_type}: {e}")
             return JsonResponse({'error': 'Internal server error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+def delete_neuro1_document(request, unique_identifier):
+    if request.method == 'DELETE':
+        document = get_object_or_404(Document, unique_identifier=unique_identifier)
+        if document.template != 'neuro1':
+            return JsonResponse({'error': 'Not a neuro1 document'}, status=400)
+        
+        try:
+            with transaction.atomic():
+                # Assuming metadata stores UUIDs of associated nodes
+                if document.metadata.get('experiments'):
+                    for exp in document.metadata['experiments']:
+                        Experiment.objects.filter(unique_identifier=exp['unique_identifier']).delete()
+                        for meas in exp.get('measurements', []):
+                            Measurement.objects.filter(unique_identifier=meas['unique_identifier']).delete()
+
+                if document.metadata.get('paper'):
+                    Paper.objects.filter(unique_identifier=document.metadata['paper']['unique_identifier']).delete()
+
+                document.delete()
+            return JsonResponse({'message': 'Document and all associated nodes deleted successfully.'}, status=204)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
