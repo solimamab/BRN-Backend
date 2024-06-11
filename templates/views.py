@@ -1,11 +1,11 @@
+from django.shortcuts import get_object_or_404
+from requests import Response
 from rest_framework.parsers import JSONParser
 from rest_framework.views import APIView
 from rest_framework import status
 from django.http import JsonResponse
 from django.db import transaction
-
 from BRN import settings
-
 from .models import Document, GlasserRegion, Paper, Experiment, Measurement
 from .serializers import PaperSerializer, ExperimentSerializer, MeasurementSerializer
 from .parsers import parse_document
@@ -166,3 +166,46 @@ class PaperSubmissionView(APIView):
 
         coordinates = f'"{label}": {x:.1f}, {y:.1f}, {z:.1f}'
         return coordinates, regions_str
+    
+
+class DocumentNodeManagementAPI(APIView):
+    def get(self, request, unique_identifier):
+        """
+        Fetch metadata for a document given its unique identifier.
+        """
+        document = get_object_or_404(Document, unique_identifier=unique_identifier)
+        if document.metadata:
+            return Response(document.metadata)
+        else:
+            return Response({"error": "No metadata found for the specified document"}, status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, unique_identifier):
+        """
+        Delete a node (paper, experiment, or measurement) based on UUID and type provided in the request.
+        """
+        node_type = request.GET.get('type')  # Assuming type is sent as a query parameter
+        node_uuid = unique_identifier  # Assuming uuid is in the URL
+
+        if not node_type or not node_uuid:
+            return JsonResponse({'error': 'Missing type or uuid'}, status=status.HTTP_400_BAD_REQUEST)
+
+        model_map = {
+            'paper': Paper,
+            'experiment': Experiment,
+            'measurement': Measurement
+        }
+
+        model = model_map.get(node_type)
+
+        if not model:
+            return JsonResponse({'error': 'Invalid node type specified'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            node = model.objects.get(unique_identifier=node_uuid)
+            node.delete()
+            return JsonResponse({'message': f'{node_type} deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+        except model.DoesNotExist:
+            return JsonResponse({'error': 'Node not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Error deleting {node_type}: {e}")
+            return JsonResponse({'error': 'Internal server error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
