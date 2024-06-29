@@ -16,18 +16,25 @@ class Command(BaseCommand):
             raise CommandError(f"Failed to read Excel file from {self.filepath}: {e}")
 
         for _, row in df.iterrows():
-            try:
-                region = GlasserRegion(
-                    index=int(row[0]),  # Assuming the first column is 'index'
-                    name=row[2],  # Assuming the third column is 'name'
-                    right_hemisphere_reference_key=row.get('Right Hemisphere Key', ''),
-                    left_hemisphere_reference_key=row.get('Left Hemisphere Key', ''),
-                    additional_labels=row.get('Additional Labels', {})  # Ensure it's a dictionary if used
-                )
-                region.save()
-                self.stdout.write(self.style.SUCCESS(f"Successfully added: {region}"))
-            except ValidationError as ve:
-                self.stdout.write(self.style.ERROR(f"Validation error for {row[2]}: {ve}"))
-            except Exception as e:
-                self.stdout.write(self.style.ERROR(f"Failed to add {row[2]}: {e}"))
+            # Process the original data
+            self.process_row(row, int(row[0]), row[2])
 
+            # Process the modified data with new indices
+            new_index = 1000 + int(row[0])  # Adding 1000 to the original index
+            self.process_row(row, new_index, row[2], suffix=' - Modified')
+
+    def process_row(self, row, index, name, suffix=''):
+        try:
+            region = GlasserRegion(
+                index=index,
+                name=f"{name}{suffix}",
+                right_hemisphere_reference_key=row.get('Right Hemisphere Key', ''),
+                left_hemisphere_reference_key=row.get('Left Hemisphere Key', ''),
+                additional_labels=row.get('Additional Labels', {})  # Ensure it's a dictionary if used
+            )
+            region.save()
+            self.stdout.write(self.style.SUCCESS(f"Successfully added: {region}"))
+        except ValidationError as ve:
+            self.stdout.write(self.style.ERROR(f"Validation error for {name}: {ve}"))
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"Failed to add {name}: {e}"))

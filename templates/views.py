@@ -151,13 +151,14 @@ class PaperSubmissionView(APIView):
         try:
             glasserAtlas = load_atlas(atlas_path)
             parcel = find_closest_parcel(glasserAtlas, np.array([x, y, z]))
+            logger.debug(f"Found parcel: {parcel}")
         except FileNotFoundError as e:
             logger.error(f"Atlas file not found: {e}")
             raise
 
         if parcel:
             try:
-                region = GlasserRegion.objects.get(index=str(parcel).lstrip('10'))
+                region = GlasserRegion.objects.get(index=parcel)  # Direct use of 'parcel'
                 regions_str = f'"{label}":{region.index}'
             except GlasserRegion.DoesNotExist:
                 regions_str = f'"{label}": "Unknown"'
